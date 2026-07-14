@@ -25,6 +25,46 @@ with or endorsed by OpenAI. Codex's local storage formats are implementation
 details and may change; always audit with the version of the tool you intend to
 use before taking action.
 
+## Quick start
+
+You need macOS, Python 3.9 or newer, and an existing Codex home (normally
+`~/.codex`). Clone and install the command in a virtual environment:
+
+```sh
+git clone https://github.com/YuanpingSong/codex-history-toolkit.git
+cd codex-history-toolkit
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install .
+codex-history --version
+```
+
+Fully quit ChatGPT/Codex and stop automated agents, then create the read-only
+inventory that every other workflow uses:
+
+```sh
+codex-history audit --require-stable
+```
+
+Open the printed report directory and review `summary.txt`. Continue only when
+the audit says `Stable snapshot: yes` and `SQLite quick_check: ok`. You can then
+choose either of these independent next steps:
+
+```sh
+# Copy meaningful interactive conversations into a private migration bundle.
+codex-history export
+
+# Or create a read-only five-thread pilot plan for archival review.
+codex-history archive plan \
+  --include automated \
+  --include empty-shell \
+  --limit 5
+```
+
+Neither command above applies an archive plan. See [Archive reviewed
+threads](#archive-reviewed-threads) before making any state-changing archival
+run, or read [the migration guide](docs/migration.md) before moving an export.
+
 ## Why this exists
 
 A busy Codex home can contain interactive chats, CLI sessions, scheduled work,
