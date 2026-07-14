@@ -1,0 +1,6 @@
+#!/bin/sh
+set -eu
+
+repo_root=$(git rev-parse --show-toplevel)
+export PYTHONPATH="$repo_root/src${PYTHONPATH:+:$PYTHONPATH}"
+exec python3 -m codex_history.artifact_guard staged

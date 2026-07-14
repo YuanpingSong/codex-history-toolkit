@@ -1,0 +1,54 @@
+name: Safety checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  private-artifact-history-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.9"
+      - name: Reject private Codex data in Git history
+        run: PYTHONPATH=src python3 -m codex_history.artifact_guard history
+
+  test-build-and-install:
+    name: Python ${{ matrix.python }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.9", "3.13"]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Run tests and tracked-file safety checks
+        run: make test check
+      - name: Build source and wheel distributions
+        run: |
+          python -m pip install --upgrade build
+          python -m build
+      - name: Validate and install the source distribution
+        run: |
+          python scripts/check_sdist.py dist/*.tar.gz
+          python -m pip install --no-deps --force-reinstall dist/*.tar.gz
+          codex-history --version
+      - name: Install the wheel without runtime dependencies
+        run: python -m pip install --no-deps --force-reinstall dist/*.whl
+      - name: Smoke-test the installed CLI
+        run: |
+          codex-history --help
+          codex-history audit --help
+          codex-history export --help
+          codex-history archive --help
